@@ -115,6 +115,7 @@ int run_bf(char *source_code, size_t memory_size) {
             break;
         }
     }
+    printf("\n");
     return 0;
 
 }
@@ -162,6 +163,8 @@ int main(int argc, char *argv[]) {
     // Run the code
     size_t memory_size = strlen(source_code);
     run_bf(source_code, memory_size);
+
+    free(source_code);
 
     return 0;
 }

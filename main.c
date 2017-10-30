@@ -1,140 +1,167 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h> /* getopt */
 #include <errno.h>
 
 /*
 
-    >   Move the pointer to the right
-    <   Move the pointer to the left
-    +   Increment the memory cell under the pointer
-    -   Decrement the memory cell under the pointer
-    .   Output the character signified by the cell at the pointer
-    ,   Input a character and store it in the cell at the pointer
-    [   Jump past the matching ] if the cell under the pointer is 0
-    ]   Jump back to the matching [ if the cell under the pointer is nonzero
-
     TODO
     - compiler
-    - error handling
-    - better code
+    - compress bf code
 
 */
 
-char *file_name;
 extern int errno;
 
-char *load_code() {
-    size_t length;
-    char *buffer = 0;
-    FILE *source_code = fopen(file_name, "rb");
+enum {
+    READ_FILE, READ_ARG, READ_ERROR
+};
 
-    if (source_code) {
-        fseek(source_code, 0, SEEK_END);
-        length = ftell(source_code);
-        fseek(source_code, 0, SEEK_SET);
-        buffer = malloc(length);
-        if (buffer) {
-            fread (buffer, 1, length, source_code);
-        }
-    fclose (source_code);
+char *load_code(FILE *input_file) {
+    char *buffer = 0;
+
+    fseek(input_file, 0, SEEK_END);
+    size_t length = ftell(input_file);
+    fseek(input_file, 0, SEEK_SET);
+    buffer = malloc(length);
+
+    if (buffer) {
+        fread(buffer, 1, length, input_file);
     }
 
-    else {
-            perror("Error while opening file: ");
-            exit(EXIT_FAILURE);
+    else if (!buffer) {
+        perror("Malloc fail");
+        exit(EXIT_FAILURE);
+    }
 
+    // Check for correct number of loops
+    int balance = 0;
+    for (int i = 0; i < strlen(buffer); i++) {
+        switch (buffer[i]) {
+        case '[':
+            balance++;
+            break;
+        case ']':
+            balance--;
+            break;
+        }
+    }
+    if (balance < 0) {
+        puts("End of the loop was encountered before the start");
+        exit(EXIT_FAILURE);
+    }
+    else if (balance != 0) {
+        puts("Unbalanced number of loops");
+        exit(EXIT_FAILURE);
     }
 
     return buffer;
 }
 
-int bf_interpreter(char source[], size_t memory_size) {
+int run_bf(char *source_code, size_t memory_size) {
+    // Allocate memory
     char memory[memory_size];
     memset(memory, 0, memory_size);
     char *pointer = memory;
-    char instruction;
-    size_t loop_counter;
 
-    for (int i = 0; source[i] != '\0'; i++) {
-        instruction = source[i];
+    // Interpret instructions
+    for (int i = 0; i < memory_size + 1; i++) {
+        char instruction = source_code[i];
         switch (instruction) {
-            case '+':
-                ++*pointer;
-                break;
-            case '-':
-                --*pointer;
-                break;
-            case '>':
-                ++pointer;
-                break;
-            case '<':
-                --pointer;
-                break;
-            case '.':
-                putchar(*pointer);
-                break;
-            case ',':
-                *pointer = getchar();
-                break;
-            case '[':
-                if (!*pointer) {
-                    loop_counter = 1;
-                    while (loop_counter) {
-                        instruction = source[++i];
-                        if (instruction == ']')
-                            --loop_counter;
-                        else if (instruction == '[')
-                            ++loop_counter;
-          }
-        }
+        case '+':
+            ++*pointer;
             break;
-            case ']':
-                if (*pointer) {
-                    loop_counter = 1;
-                    while (loop_counter > 0) {
-                        instruction = source[--i];
-                        if (instruction == '[') {
-                            --loop_counter;
-                        }
-                        else if (instruction == ']') {
-                            ++loop_counter;
-                        }
+        case '-':
+            --*pointer;
+            break;
+        case '>':
+            ++pointer;
+            break;
+        case '<':
+            --pointer;
+            break;
+        case '.':
+            putchar(*pointer);
+            break;
+        case ',':
+            *pointer = getchar();
+            break;
+        case '[':
+            if (!*pointer) {
+                size_t loop_counter = 1;
+                while (loop_counter) {
+                    instruction = source_code[++i];
+                    if (instruction == ']')
+                        --loop_counter;
+                    else if (instruction == '[')
+                        ++loop_counter;
+                }
+            }
+            break;
+        case ']':
+            if (*pointer) {
+                size_t loop_counter = 1;
+                while (loop_counter > 0) {
+                    instruction = source_code[--i];
+                    if (instruction == '[') {
+                        --loop_counter;
+                    }
+                    else if (instruction == ']') {
+                        ++loop_counter;
                     }
                 }
-                break;
-            default:
-                printf("Incorrect character.");
-                exit(EXIT_FAILURE);
+            }
+            break;
         }
-
     }
     return 0;
 
 }
 
-
 int main(int argc, char *argv[]) {
 
-    if (argc == 2) {
+    // How to read the file, input argument
+    int input_mode;
+    char *input_arg = "";
 
-        file_name = argv[1];
-
-        char *source = load_code();
-
-        size_t memory_size = sizeof(source)/sizeof(source[0]);
-
-        bf_interpreter(source, memory_size);
-
-        printf("\n");
-
-        free(source);
-
+    // Parameter parsing
+    int opt;
+    while ((opt = getopt(argc, argv, "f:c:")) != -1) {
+        switch (opt) {
+        case 'f':
+            input_mode = READ_FILE;
+            input_arg = optarg;
+            break;
+        case 'c':
+            input_mode = READ_ARG;
+            input_arg = optarg;
+            break;
+        }
     }
-    else {
-        printf("Usage ./brainterpreter <filename.bf>\n");
-        exit(EXIT_FAILURE);
+
+    FILE * input_file;
+
+    switch(input_mode) {
+    case READ_FILE:
+        input_file = fopen(input_arg, "r");
+        if (!input_file) {
+            perror("Error while opening file");
+            exit(EXIT_FAILURE);
+        }
+        break;
+    case READ_ARG:
+        // TODO(W3ndige): Implement reading from argument.
+        break;
     }
+
+    // Load the code from the file
+    char *source_code = load_code(input_file);
+    fclose(input_file);
+
+    // Run the code
+    size_t memory_size = strlen(source_code);
+    run_bf(source_code, memory_size);
 
     return 0;
 }

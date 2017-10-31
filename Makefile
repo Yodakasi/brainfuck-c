@@ -5,5 +5,5 @@ clean:
 	rm brainfuck
 
 tests: brainfuck
-	./brainfuck -f fibonacci.bf
-	./brainfuck -f factorial.bf
+	./brainfuck -f ./test_cases/fizz_buzz.bf
+	./brainfuck -f ./test_cases/sierpinski.bf

@@ -4,13 +4,8 @@
 #include <unistd.h> /* getopt */
 #include <errno.h>
 
-/*
-
-    TODO
-    - compiler
-    - compress bf code
-
-*/
+//  TODO(W3ndige): Compress the code from characters other than bf
+//  TODO(W3ndige): Dynamic memory allocation - check all cases
 
 extern int errno;
 
@@ -61,8 +56,7 @@ char *load_code(FILE *input_file) {
 
 int run_bf(char *source_code, size_t memory_size) {
     // Allocate memory
-    char memory[memory_size];
-    memset(memory, 0, memory_size);
+    char *memory = calloc(memory_size, sizeof(int));
     char *pointer = memory;
 
     // Interpret instructions
@@ -152,7 +146,7 @@ int main(int argc, char *argv[]) {
         }
         break;
     case READ_ARG:
-        // TODO(W3ndige): Implement reading from argument.
+        input_file = fmemopen(input_arg, strlen(input_arg), "r");
         break;
     }
 

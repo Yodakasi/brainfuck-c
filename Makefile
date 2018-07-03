@@ -1,9 +1,13 @@
-brainfuck: brainfuck.c
-	gcc -Wall brainfuck.c -o brainfuck
+OBJS = src/brainfuck.c
+CC = gcc
+COMPILER_FLAGS = -Wall -Wextra
+OBJ_NAME = bin/main
+
+all: $(OBJS)
+	$(CC) $(OBJS) $(COMPILER_FLAGS) -o $(OBJ_NAME)
 
 clean:
-	rm brainfuck
+	rm $(OBJ_NAME)
 
-tests: brainfuck
-	./brainfuck -f ./test_cases/fizz_buzz.bf
-	./brainfuck -f ./test_cases/sierpinski.bf
+test:
+	./$(OBJ_NAME) -f ./test_cases/sierpinski.bf

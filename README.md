@@ -1,2 +1,23 @@
-# brainfuck-c
-Brainfuck interpreter written in C
+Brainfuck Interpreter
+=====================
+
+Simple brainfuck interpreter written in C, whichh is capable of loading code from files, or from the command line argument. 
+
+Installation
+------------
+
+* `make all` to compile the source code
+* `make test` to run a simple test
+
+Usage
+-----
+
+* `./bin/main -f <path to source code>` to run the code from file
+* `./bin/main -c <source code>` to run the code as the command line argument
+
+License
+-------
+
+Permission to use, copy, modify, and distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.

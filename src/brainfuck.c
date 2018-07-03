@@ -8,32 +8,28 @@
 //  TODO(W3ndige): Dynamic memory allocation - check all cases
 
 extern int errno;
+extern char *optarg;
 
 enum {
     READ_FILE, READ_ARG, READ_ERROR
 };
 
-char *load_code(FILE *input_file) {
-    char *buffer = 0;
+void load_code(FILE *input_file, char **source_code) {
 
     fseek(input_file, 0, SEEK_END);
     size_t length = ftell(input_file);
     fseek(input_file, 0, SEEK_SET);
-    buffer = malloc(length);
+    *source_code = malloc(length * sizeof(char));
 
-    if (buffer) {
-        fread(buffer, 1, length, input_file);
-    }
-
-    else if (!buffer) {
+    if (*source_code == NULL) {
         perror("Malloc fail");
         exit(EXIT_FAILURE);
     }
-
+    fread(*source_code, sizeof(char), length, input_file);
     // Check for correct number of loops
     int balance = 0;
-    for (int i = 0; i < strlen(buffer); i++) {
-        switch (buffer[i]) {
+    for (size_t i = 0; i < length; i++) {
+        switch (*(*source_code + i)) {
         case '[':
             balance++;
             break;
@@ -50,8 +46,6 @@ char *load_code(FILE *input_file) {
         puts("Unbalanced number of loops");
         exit(EXIT_FAILURE);
     }
-
-    return buffer;
 }
 
 int run_bf(char *source_code, size_t memory_size) {
@@ -60,7 +54,7 @@ int run_bf(char *source_code, size_t memory_size) {
     char *pointer = memory;
 
     // Interpret instructions
-    for (int i = 0; i < memory_size + 1; i++) {
+    for (size_t i = 0; i < memory_size + 1; i++) {
         char instruction = source_code[i];
         switch (instruction) {
         case '+':
@@ -135,8 +129,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    FILE * input_file;
-
+    FILE *input_file;
     switch(input_mode) {
     case READ_FILE:
         input_file = fopen(input_arg, "r");
@@ -151,7 +144,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Load the code from the file
-    char *source_code = load_code(input_file);
+    char *source_code;
+    load_code(input_file, &source_code);
     fclose(input_file);
 
     // Run the code
